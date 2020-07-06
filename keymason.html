@@ -15,8 +15,18 @@ $( document ).ready(function() {
     $("input[name='keyset'], input[name='profile'], input[name='selectable']").on('change',function(){
     	$("#keyboard").removeClass().addClass($("input[name='keyset']:checked").val()).addClass($("input[name='profile']:checked").val());
     	if ($('input[name="selectable"]').is(":checked")) {
-			$("#keyboard").addClass("selectable");
-		}
+				$("#keyboard").addClass("selectable");
+			}
+
+			if ($("input[name='keyset']:checked").val() == "custom") {
+				$('.customColors').removeClass('hidden').find('input').on('change', function(){
+					customColor();
+				});
+				customColor();
+			} else {
+				$('.customColors').addClass('hidden')
+				$('.customColors input').off('change');
+			}
 
     }).first().trigger('change');
 
@@ -40,7 +50,7 @@ $( document ).ready(function() {
 <h1>KeyMason</h1> /
 <h2>Demo</h2>
 <a href="https://github.com/miragecraft/keymason" style="margin-left:1ch;font-weight:bold">Github / Documentation</a>
-<div style="margin: .3rem 0">
+<div class="options" style="margin: .3rem 0">
 <strong>Color Scheme</strong>
 <label><input type="radio" name="keyset" value="" checked> Default</label>
 <label><input type="radio" name="keyset" value="brick"> Brick</label>
@@ -54,6 +64,7 @@ $( document ).ready(function() {
 <label><input type="radio" name="keyset" value="industry"> Heavy Industry</label>
 <label><input type="radio" name="keyset" value="nines"> Nines</label>
 <label><input type="radio" name="keyset" value="denim"> Denim</label>
+<label><input type="radio" name="keyset" value="custom"> Custom</label>
 <label><input type="radio" name="keyset" value="blueprint"> <b>Blueprint Mode</b></label>
 <br>
 <strong>Key Profile</strong>
@@ -70,6 +81,98 @@ $( document ).ready(function() {
 <strong>Selectable</strong>
 <label><input type="checkbox" name="selectable" value="" checked> Hover  Highlight</label>
 </div>
+
+<div class="customColors hidden">
+	<style class="customStyles">
+	</style>
+	<div class="section selectors">
+		<strong>Custom colors</strong>
+		<label><input type="checkbox" name="selector" value="all" checked> All</label>
+		<label><input type="checkbox" name="selector" value="alpha" > Alpha</label>
+		<label><input type="checkbox" name="selector" value="mod" > Mods</label>
+		<label><input type="checkbox" name="selector" value="simbol" > Simbols</label>
+		<label><input type="checkbox" name="selector" value="arrow" > Arrows</label>
+		<label><input type="checkbox" name="selector" value="number" > Numbers</label>
+		<label><input type="checkbox" name="selector" value="customSelector" > Function</label>
+	</div>
+	<div class="section">
+		<strong class="backgroud">Background</strong>
+		<label><input type="radio" name="colorback" value="#ebd400"><div class="colorMiniature" style="background-color: #ebd400;"></div> GE1</label>
+		<label><input type="radio" name="colorback" value="#f8c200"><div class="colorMiniature" style="background-color: #f8c200;"></div> CV</label>
+		<label><input type="radio" name="colorback" value="#e5a100"><div class="colorMiniature" style="background-color: #e5a100;"></div> N6</label>
+		<label><input type="radio" name="colorback" value="#ee6900"><div class="colorMiniature" style="background-color: #ee6900;"></div> V2</label>
+		<label><input type="radio" name="colorback" value="#cb3d6e"><div class="colorMiniature" style="background-color: #cb3d6e;"></div> MG1</label>
+		<label><input type="radio" name="colorback" value="#c87e74"><div class="colorMiniature" style="background-color: #c87e74;"></div> 3C</label>
+		<label><input type="radio" name="colorback" value="#dd1126"><div class="colorMiniature" style="background-color: #dd1126;"></div> RO2</label>
+		<label><input type="radio" name="colorback" value="#d02f1c"><div class="colorMiniature" style="background-color: #d02f1c;"></div> V1</label>
+		<label><input type="radio" name="colorback" value="#bc251e"><div class="colorMiniature" style="background-color: #bc251e;"></div> P3</label>
+		<label><input type="radio" name="colorback" value="#8d242f"><div class="colorMiniature" style="background-color: #8d242f;"></div> RO1</label>
+		<label><input type="radio" name="colorback" value="#5d437e"><div class="colorMiniature" style="background-color: #5d437e;"></div> DY</label>
+		<label><input type="radio" name="colorback" value="#00a4a9"><div class="colorMiniature" style="background-color: #00a4a9;"></div> TU2</label>
+		<label><input type="radio" name="colorback" value="#00627a"><div class="colorMiniature" style="background-color: #00627a;"></div> TU1</label>
+		<label><input type="radio" name="colorback" value="#0084c2"><div class="colorMiniature" style="background-color: #0084c2;"></div> N5</label>
+		<label><input type="radio" name="colorback" value="#00589f"><div class="colorMiniature" style="background-color: #00589f;"></div> V4</label>
+		<label><input type="radio" name="colorback" value="#7fa580"><div class="colorMiniature" style="background-color: #7fa580;"></div> 3A</label>
+		<label><input type="radio" name="colorback" value="#768e72"><div class="colorMiniature" style="background-color: #768e72;"></div> 3B</label>
+		<label><input type="radio" name="colorback" value="#689b34"><div class="colorMiniature" style="background-color: #689b34;"></div> AE</label>
+		<label><input type="radio" name="colorback" value="#00773a"><div class="colorMiniature" style="background-color: #00773a;"></div> N7</label>
+		<label><input type="radio" name="colorback" value="#653c25"><div class="colorMiniature" style="background-color: #653c25;"></div> BR1</label>
+		<label><input type="radio" name="colorback" value="#eee2d0"><div class="colorMiniature" style="background-color: #eee2d0;"></div> WS4</label>
+		<label><input type="radio" name="colorback" value="#f7f2ea" checked><div class="colorMiniature" style="background-color: #f7f2ea;"></div> WS1</label>
+		<label><input type="radio" name="colorback" value="#e1dbd1"><div class="colorMiniature" style="background-color: #e1dbd1;"></div> CP</label>
+		<label><input type="radio" name="colorback" value="#c5c7ca"><div class="colorMiniature" style="background-color: #c5c7ca;"></div> GR1</label>
+		<label><input type="radio" name="colorback" value="#c6c9c7"><div class="colorMiniature" style="background-color: #c6c9c7;"></div> 2M</label>
+		<label><input type="radio" name="colorback" value="#ccc6c0"><div class="colorMiniature" style="background-color: #ccc6c0;"></div> 3K</label>
+		<label><input type="radio" name="colorback" value="#c3c3ba"><div class="colorMiniature" style="background-color: #c3c3ba;"></div> T9</label>
+		<label><input type="radio" name="colorback" value="#d8d2c3"><div class="colorMiniature" style="background-color: #d8d2c3;"></div> L9</label>
+		<label><input type="radio" name="colorback" value="#aca693"><div class="colorMiniature" style="background-color: #aca693;"></div> U9</label>
+		<label><input type="radio" name="colorback" value="#9b9284"><div class="colorMiniature" style="background-color: #9b9284;"></div> CB</label>
+		<label><input type="radio" name="colorback" value="#91867a"><div class="colorMiniature" style="background-color: #91867a;"></div> BJ</label>
+		<label><input type="radio" name="colorback" value="#727474"><div class="colorMiniature" style="background-color: #727474;"></div> 2B</label>
+		<label><input type="radio" name="colorback" value="#67635b"><div class="colorMiniature" style="background-color: #67635b;"></div> CC</label>
+		<label><input type="radio" name="colorback" value="#393b3b"><div class="colorMiniature" style="background-color: #393b3b;"></div> N9</label>
+		<label><input type="radio" name="colorback" value="#171718"><div class="colorMiniature" style="background-color: #171718;"></div> CR</label>
+	</div>
+	<div class="section">
+		<strong class="legends">Legends</strong>
+		<label><input type="radio" name="color" value="#ebd400"><div class="colorMiniature" style="background-color: #ebd400;"></div> GE1</label>
+		<label><input type="radio" name="color" value="#f8c200"><div class="colorMiniature" style="background-color: #f8c200;"></div> CV</label>
+		<label><input type="radio" name="color" value="#e5a100"><div class="colorMiniature" style="background-color: #e5a100;"></div> N6</label>
+		<label><input type="radio" name="color" value="#ee6900"><div class="colorMiniature" style="background-color: #ee6900;"></div> V2</label>
+		<label><input type="radio" name="color" value="#cb3d6e"><div class="colorMiniature" style="background-color: #cb3d6e;"></div> MG1</label>
+		<label><input type="radio" name="color" value="#c87e74"><div class="colorMiniature" style="background-color: #c87e74;"></div> 3C</label>
+		<label><input type="radio" name="color" value="#dd1126"><div class="colorMiniature" style="background-color: #dd1126;"></div> RO2</label>
+		<label><input type="radio" name="color" value="#d02f1c"><div class="colorMiniature" style="background-color: #d02f1c;"></div> V1</label>
+		<label><input type="radio" name="color" value="#bc251e"><div class="colorMiniature" style="background-color: #bc251e;"></div> P3</label>
+		<label><input type="radio" name="color" value="#8d242f"><div class="colorMiniature" style="background-color: #8d242f;"></div> RO1</label>
+		<label><input type="radio" name="color" value="#5d437e"><div class="colorMiniature" style="background-color: #5d437e;"></div> DY</label>
+		<label><input type="radio" name="color" value="#00a4a9"><div class="colorMiniature" style="background-color: #00a4a9;"></div> TU2</label>
+		<label><input type="radio" name="color" value="#00627a"><div class="colorMiniature" style="background-color: #00627a;"></div> TU1</label>
+		<label><input type="radio" name="color" value="#0084c2"><div class="colorMiniature" style="background-color: #0084c2;"></div> N5</label>
+		<label><input type="radio" name="color" value="#00589f"><div class="colorMiniature" style="background-color: #00589f;"></div> V4</label>
+		<label><input type="radio" name="color" value="#7fa580"><div class="colorMiniature" style="background-color: #7fa580;"></div> 3A</label>
+		<label><input type="radio" name="color" value="#768e72"><div class="colorMiniature" style="background-color: #768e72;"></div> 3B</label>
+		<label><input type="radio" name="color" value="#689b34"><div class="colorMiniature" style="background-color: #689b34;"></div> AE</label>
+		<label><input type="radio" name="color" value="#00773a"><div class="colorMiniature" style="background-color: #00773a;"></div> N7</label>
+		<label><input type="radio" name="color" value="#653c25"><div class="colorMiniature" style="background-color: #653c25;"></div> BR1</label>
+		<label><input type="radio" name="color" value="#eee2d0"><div class="colorMiniature" style="background-color: #eee2d0;"></div> WS4</label>
+		<label><input type="radio" name="color" value="#f7f2ea"><div class="colorMiniature" style="background-color: #f7f2ea;"></div> WS1</label>
+		<label><input type="radio" name="color" value="#e1dbd1"><div class="colorMiniature" style="background-color: #e1dbd1;"></div> CP</label>
+		<label><input type="radio" name="color" value="#c5c7ca"><div class="colorMiniature" style="background-color: #c5c7ca;"></div> GR1</label>
+		<label><input type="radio" name="color" value="#c6c9c7"><div class="colorMiniature" style="background-color: #c6c9c7;"></div> 2M</label>
+		<label><input type="radio" name="color" value="#ccc6c0"><div class="colorMiniature" style="background-color: #ccc6c0;"></div> 3K</label>
+		<label><input type="radio" name="color" value="#c3c3ba"><div class="colorMiniature" style="background-color: #c3c3ba;"></div> T9</label>
+		<label><input type="radio" name="color" value="#d8d2c3"><div class="colorMiniature" style="background-color: #d8d2c3;"></div> L9</label>
+		<label><input type="radio" name="color" value="#aca693"><div class="colorMiniature" style="background-color: #aca693;"></div> U9</label>
+		<label><input type="radio" name="color" value="#9b9284"><div class="colorMiniature" style="background-color: #9b9284;"></div> CB</label>
+		<label><input type="radio" name="color" value="#91867a"><div class="colorMiniature" style="background-color: #91867a;"></div> BJ</label>
+		<label><input type="radio" name="color" value="#727474"><div class="colorMiniature" style="background-color: #727474;"></div> 2B</label>
+		<label><input type="radio" name="color" value="#67635b"><div class="colorMiniature" style="background-color: #67635b;"></div> CC</label>
+		<label><input type="radio" name="color" value="#393b3b"><div class="colorMiniature" style="background-color: #393b3b;"></div> N9</label>
+		<label><input type="radio" name="color" value="#171718" checked><div class="colorMiniature" style="background-color: #171718;"></div> CR</label>
+	</div>
+</div>
+
 <div id="keyboard">
 <k-row>
 	<k-cap class="mod"><k-legend class="small">Esc</k-legend></k-cap>

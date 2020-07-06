@@ -77,3 +77,26 @@ html:before {
   width:min-content;
 }
 
+div.options, div.customColors{
+  margin: 0px 20px;
+}
+div.options strong, div.customColors strong{
+  display: block;
+}
+.customColors {
+  display: block;
+}
+.customColors.hidden {
+  display: none;
+}
+.customColors strong{
+  margin-top: 20px;
+}
+.customColors label, .customColors input{
+  display: inline-block;
+}
+.customColors .colorMiniature{
+  display: inline-block;
+  height: 15px;
+  width: 15px;
+}

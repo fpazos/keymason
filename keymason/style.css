@@ -77,20 +77,31 @@ html:before {
   width:min-content;
 }
 
+div.section {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  flex-basis: 10%;
+  flex-direction: row;
+}
+div.section strong{
+  flex: 10 0 100%
+}
+div.section label{
+  flex: 10 0 10%
+}
 div.options, div.customColors{
   margin: 0px 20px;
 }
 div.options strong, div.customColors strong{
-  display: block;
+  display: inline-block;
 }
 .customColors {
-  display: block;
+  display: inline-block;
 }
 .customColors.hidden {
   display: none;
-}
-.customColors strong{
-  margin-top: 20px;
 }
 .customColors label, .customColors input{
   display: inline-block;

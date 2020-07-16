@@ -11,6 +11,91 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
 
 <script>
+
+function shadeColor(color, percent) { // From stackoverflow
+	var R = parseInt(color.substring(1,3),16);
+	var G = parseInt(color.substring(3,5),16);
+	var B = parseInt(color.substring(5,7),16);
+
+	R = parseInt(R * (100 + percent) / 100);
+	G = parseInt(G * (100 + percent) / 100);
+	B = parseInt(B * (100 + percent) / 100);
+
+	R = (R<255)?R:255;  
+	G = (G<255)?G:255;  
+	B = (B<255)?B:255;  
+
+	var RR = ((R.toString(16).length==1)?"0"+R.toString(16):R.toString(16));
+	var GG = ((G.toString(16).length==1)?"0"+G.toString(16):G.toString(16));
+	var BB = ((B.toString(16).length==1)?"0"+B.toString(16):B.toString(16));
+
+	return "#"+RR+GG+BB;
+};
+
+var currentLegend, currentBase, currentStyle = {};
+var shadedColors = function(legend, base){
+	var colorVars = {
+		legend: legend,
+		base: base,
+		lightest: shadeColor(currentBase, 30),
+		lighter: shadeColor(currentBase, 15),
+		dark: shadeColor(currentBase, -15),
+		darker: shadeColor(currentBase, -30),
+		darkest: shadeColor(currentBase, -40),
+		shadow: shadeColor(currentBase, -50)
+	}
+	return colorVars;
+};
+
+var defaultCustomSelectors = ["all", "alpha", "mod", "simbol", "arrows", "number", "customSelector"];
+
+var customColor = function(){
+	var stored = localStorage.getItem('stored');
+	var checkedSelectors = $('input[name="selector"]:checked');
+	var selectors = [];
+	currentBase = $('input[name="colorback"]:checked').val();
+	currentLegend = $('input[name="color"]:checked').val();
+
+	$.each(checkedSelectors, function(i, check){
+		selectors.push($(check).val());
+	});
+
+	if (selectors.indexOf('all') >= 0){
+		selectors = defaultCustomSelectors;
+	}
+	if (selectors.length){
+		for (var i = 0; i < selectors.length; i++) {
+			currentStyle[selectors[i]] = shadedColors(currentLegend, currentBase);
+		}
+		drawCustoms(currentStyle);
+	}
+
+
+};
+
+var drawCustoms = function(currentStyle){
+  var colors, 
+	style = "";
+
+	Object.keys(currentStyle).forEach(key => {
+		colors = "";
+		if (key == "all"){
+			style += ".custom {";
+		} else {
+			style += ".custom ."+ key + "{";
+		}
+		
+		Object.keys(currentStyle[key]).forEach(valueKey =>{
+			colors += " --" + valueKey + ":" + currentStyle[key][valueKey] + ";";
+		})
+
+		style += colors + "}";
+	});
+
+	$('.customStyles').empty().html(style);
+
+};
+
 $( document ).ready(function() {
     $("input[name='keyset'], input[name='profile'], input[name='selectable']").on('change',function(){
     	$("#keyboard").removeClass().addClass($("input[name='keyset']:checked").val()).addClass($("input[name='profile']:checked").val());
@@ -19,13 +104,18 @@ $( document ).ready(function() {
 			}
 
 			if ($("input[name='keyset']:checked").val() == "custom") {
-				$('.customColors').removeClass('hidden').find('input').on('change', function(){
+				$('.customColors').removeClass('hidden').find('input:not([name="customizedColor"])').off('change').on('change', function(){
 					customColor();
 				});
+				$('input[name="customizedColor"]').on('change', function(){
+					$(this).siblings('input[type="radio"]').val($(this).val()).attr('checked', 'checked');
+					customColor();
+				})
 				customColor();
 			} else {
-				$('.customColors').addClass('hidden')
-				$('.customColors input').off('change');
+				$('.customColors').addClass('hidden');
+				$('.customColors input, input[name="customizedColor"]').off('change');
+				$('.customStyles').empty();
 			}
 
     }).first().trigger('change');
@@ -87,16 +177,17 @@ $( document ).ready(function() {
 	</style>
 	<div class="section selectors">
 		<strong>Custom colors</strong>
+		<strong>Selector:</strong>
 		<label><input type="checkbox" name="selector" value="all" checked> All</label>
 		<label><input type="checkbox" name="selector" value="alpha" > Alpha</label>
 		<label><input type="checkbox" name="selector" value="mod" > Mods</label>
 		<label><input type="checkbox" name="selector" value="simbol" > Simbols</label>
-		<label><input type="checkbox" name="selector" value="arrow" > Arrows</label>
+		<label><input type="checkbox" name="selector" value="arrows" > Arrows</label>
 		<label><input type="checkbox" name="selector" value="number" > Numbers</label>
-		<label><input type="checkbox" name="selector" value="customSelector" > Function</label>
+		<label><input type="checkbox" name="selector" value="function" > Function</label>
 	</div>
 	<div class="section">
-		<strong class="backgroud">Background</strong>
+		<strong class="backgroud">Background:</strong>
 		<label><input type="radio" name="colorback" value="#ebd400"><div class="colorMiniature" style="background-color: #ebd400;"></div> GE1</label>
 		<label><input type="radio" name="colorback" value="#f8c200"><div class="colorMiniature" style="background-color: #f8c200;"></div> CV</label>
 		<label><input type="radio" name="colorback" value="#e5a100"><div class="colorMiniature" style="background-color: #e5a100;"></div> N6</label>
@@ -132,9 +223,10 @@ $( document ).ready(function() {
 		<label><input type="radio" name="colorback" value="#67635b"><div class="colorMiniature" style="background-color: #67635b;"></div> CC</label>
 		<label><input type="radio" name="colorback" value="#393b3b"><div class="colorMiniature" style="background-color: #393b3b;"></div> N9</label>
 		<label><input type="radio" name="colorback" value="#171718"><div class="colorMiniature" style="background-color: #171718;"></div> CR</label>
+		<label><input type="radio" name="colorback" value=""><input name="customizedColor" type="color" val=""> Custom</label>
 	</div>
 	<div class="section">
-		<strong class="legends">Legends</strong>
+		<strong class="legends">Legends:</strong>
 		<label><input type="radio" name="color" value="#ebd400"><div class="colorMiniature" style="background-color: #ebd400;"></div> GE1</label>
 		<label><input type="radio" name="color" value="#f8c200"><div class="colorMiniature" style="background-color: #f8c200;"></div> CV</label>
 		<label><input type="radio" name="color" value="#e5a100"><div class="colorMiniature" style="background-color: #e5a100;"></div> N6</label>
@@ -170,6 +262,7 @@ $( document ).ready(function() {
 		<label><input type="radio" name="color" value="#67635b"><div class="colorMiniature" style="background-color: #67635b;"></div> CC</label>
 		<label><input type="radio" name="color" value="#393b3b"><div class="colorMiniature" style="background-color: #393b3b;"></div> N9</label>
 		<label><input type="radio" name="color" value="#171718" checked><div class="colorMiniature" style="background-color: #171718;"></div> CR</label>
+		<label><input type="radio" name="color" value=""><input name="customizedColor" type="color" val=""> Custom</label>
 	</div>
 </div>
 
@@ -177,20 +270,20 @@ $( document ).ready(function() {
 <k-row>
 	<k-cap class="mod"><k-legend class="small">Esc</k-legend></k-cap>
 
-	<k-cap  style="--x:1"><k-legend class="small">F1</k-legend></k-cap>
-	<k-cap><k-legend class="small">F2</k-legend></k-cap>
-	<k-cap><k-legend class="small">F3</k-legend></k-cap>
-	<k-cap><k-legend class="small">F4</k-legend></k-cap>
+	<k-cap class="function"  style="--x:1"><k-legend class="small">F1</k-legend></k-cap>
+	<k-cap class="function"><k-legend class="small">F2</k-legend></k-cap>
+	<k-cap class="function"><k-legend class="small">F3</k-legend></k-cap>
+	<k-cap class="function"><k-legend class="small">F4</k-legend></k-cap>
 
-	<k-cap class="mod" style="--x:.5"><k-legend class="small">F5</k-legend></k-cap>
-	<k-cap class="mod"><k-legend class="small">F6</k-legend></k-cap>
-	<k-cap class="mod"><k-legend class="small">F7</k-legend></k-cap>
-	<k-cap class="mod"><k-legend class="small">F8</k-legend></k-cap>
+	<k-cap class="function mod" style="--x:.5"><k-legend class="small">F5</k-legend></k-cap>
+	<k-cap class="function mod"><k-legend class="small">F6</k-legend></k-cap>
+	<k-cap class="function mod"><k-legend class="small">F7</k-legend></k-cap>
+	<k-cap class="function mod"><k-legend class="small">F8</k-legend></k-cap>
 
-	<k-cap  style="--x:.5"><k-legend class="small">F9</k-legend><k-window></k-window></k-cap>
-	<k-cap class="mod"><k-legend class="small">F10</k-legend><k-window class="red"></k-window></k-cap>
-	<k-cap><k-legend class="small">F11</k-legend><k-window class="green"></k-window></k-cap>
-	<k-cap class="mod"><k-legend class="small">F12</k-legend><k-window class="blue"></k-window></k-cap>
+	<k-cap class="function"  style="--x:.5"><k-legend class="small">F9</k-legend><k-window></k-window></k-cap>
+	<k-cap class="function mod"><k-legend class="small">F10</k-legend><k-window class="red"></k-window></k-cap>
+	<k-cap class="function"><k-legend class="small">F11</k-legend><k-window class="green"></k-window></k-cap>
+	<k-cap class="function mod"><k-legend class="small">F12</k-legend><k-window class="blue"></k-window></k-cap>
 
     <k-cap style="--x:.25" class="mod"><k-legend class="small center">PrtSc</k-legend></k-cap>
 	<k-cap class="mod"><k-legend class="small center">Scroll<br>Lock</k-legend></k-cap>
@@ -200,55 +293,55 @@ $( document ).ready(function() {
 <k-row style="--y:.5">
 <k-column>
 <k-row>
-	<k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">~</k-legend>
 		<k-legend class="medium bottom left">`</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">!</k-legend>
 		<k-legend class="medium bottom left">1</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">@</k-legend>
 		<k-legend class="medium bottom left">2</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">#</k-legend>
 		<k-legend class="medium bottom left">3</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">$</k-legend>
 		<k-legend class="medium bottom left">4</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">%</k-legend>
 		<k-legend class="medium bottom left">5</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">^</k-legend>
 		<k-legend class="medium bottom left">6</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">&</k-legend>
 		<k-legend class="medium bottom left">7</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">*</k-legend>
 		<k-legend class="medium bottom left">8</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">(</k-legend>
 		<k-legend class="medium bottom left">9</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">)</k-legend>
 		<k-legend class="medium bottom left">0</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">&ndash;</k-legend>
 		<k-legend class="medium bottom left">-</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">+</k-legend>
 		<k-legend class="medium bottom left">=</k-legend>
 	</k-cap>
@@ -264,24 +357,24 @@ $( document ).ready(function() {
 			<k-icon class="tab"></k-icon>
 		</k-legend>
 	</k-cap>
-	<k-cap><k-legend class="top left">Q</k-legend></k-cap>
-	<k-cap>
+	<k-cap class="alpha"><k-legend class="top left">Q</k-legend></k-cap>
+	<k-cap class="alpha">
 		<k-legend class="top left">W</k-legend>
 		<k-legend class="medium bottom right">な</k-legend>
 	</k-cap>
-	<k-cap><k-legend class="top left">E</k-legend></k-cap>
-	<k-cap><k-legend class="top left">R</k-legend></k-cap>
-	<k-cap><k-legend class="top left">T</k-legend></k-cap>
-	<k-cap><k-legend class="top left">Y</k-legend></k-cap>
-	<k-cap><k-legend class="top left">U</k-legend></k-cap>
-	<k-cap><k-legend class="top left">I</k-legend></k-cap>
-	<k-cap><k-legend class="top left">O</k-legend></k-cap>
-	<k-cap><k-legend class="top left">P</k-legend></k-cap>
-	<k-cap>
+	<k-cap class="alpha"><k-legend class="top left">E</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">R</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">T</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">Y</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">U</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">I</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">O</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">P</k-legend></k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">{</k-legend>
 		<k-legend class="medium bottom left">[</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">}</k-legend>
 		<k-legend class="medium bottom left">]</k-legend>
 	</k-cap>
@@ -299,36 +392,36 @@ $( document ).ready(function() {
 			<k-legend class="small">Caps<br>Lock</k-legend>
 		</k-cap>
 	</k-cap>
-	<k-cap>
+	<k-cap class="alpha">
 		<k-legend class="top left">A</k-legend>
 		<k-legend class="front">Vol_Dn</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="alpha">
 		<k-legend class="top left">S</k-legend>
 		<k-legend class="front">Vol_Up</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="alpha">
 		<k-legend class="top left">D</k-legend>
 		<k-legend class="front">Mute</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="alpha">
 		<k-legend class="top left">F</k-legend>
 		<k-legend class="front">Eject</k-legend>
 		<k-homing></k-homing>
 	</k-cap>
-	<k-cap><k-legend class="top left">G</k-legend></k-cap>
-	<k-cap><k-legend class="top left">H</k-legend></k-cap>
-	<k-cap>
+	<k-cap class="alpha"><k-legend class="top left">G</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">H</k-legend></k-cap>
+	<k-cap class="alpha">
 		<k-legend class="top left">J</k-legend>
 		<k-homing></k-homing>
 	</k-cap>
-	<k-cap><k-legend class="top left">K</k-legend></k-cap>
-	<k-cap><k-legend class="top left">L</k-legend></k-cap>
-	<k-cap>
+	<k-cap class="alpha"><k-legend class="top left">K</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">L</k-legend></k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">:</k-legend>
 		<k-legend class="medium bottom left">;</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">"</k-legend>
 		<k-legend class="medium bottom left">'</k-legend>
 	</k-cap>
@@ -339,22 +432,22 @@ $( document ).ready(function() {
 	<k-cap class="mod" style="--w:2.25">
 		<k-legend class="small"><k-icon class="shift"></k-icon>&nbsp;Shift</k-legend>
 	</k-cap>
-	<k-cap><k-legend class="top left">Z</k-legend></k-cap>
-	<k-cap><k-legend class="top left">X</k-legend></k-cap>
-	<k-cap><k-legend class="top left">C</k-legend></k-cap>
-	<k-cap><k-legend class="top left">V</k-legend></k-cap>
-	<k-cap><k-legend class="top left">B</k-legend></k-cap>
-	<k-cap><k-legend class="top left">N</k-legend></k-cap>
-	<k-cap><k-legend class="top left">M</k-legend></k-cap>
-	<k-cap>
+	<k-cap class="alpha"><k-legend class="top left">Z</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">X</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">C</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">V</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">B</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">N</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">M</k-legend></k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left"><</k-legend>
 		<k-legend class="medium bottom left">,</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">></k-legend>
 		<k-legend class="medium bottom left">.</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">?</k-legend>
 		<k-legend class="medium bottom left">/</k-legend>
 	</k-cap>
@@ -408,12 +501,12 @@ $( document ).ready(function() {
 	</k-cap>
 </k-row>
 <k-row style="--x:1;--y:1">
-	<k-cap><k-legend><k-icon class="arrow up"></k-icon></k-legend></k-cap>
+	<k-cap class="arrows"><k-legend><k-icon class="arrow up"></k-icon></k-legend></k-cap>
 </k-row>
 <k-row>
-	<k-cap><k-legend><k-icon class="arrow left"></k-icon></k-legend></k-cap>
-	<k-cap><k-legend><k-icon class="arrow down"></k-icon></k-legend></k-cap>
-	<k-cap><k-legend><k-icon class="arrow right"></k-icon></k-legend></k-cap>
+	<k-cap class="arrows"><k-legend><k-icon class="arrow left"></k-icon></k-legend></k-cap>
+	<k-cap class="arrows"><k-legend><k-icon class="arrow down"></k-icon></k-legend></k-cap>
+	<k-cap class="arrows"><k-legend><k-icon class="arrow right"></k-icon></k-legend></k-cap>
 </k-row>
 </k-column>
 <k-column style="--x:.25">
@@ -424,15 +517,15 @@ $( document ).ready(function() {
 	<k-cap><k-legend>-</k-legend></k-cap>
 </k-row>
 <k-row>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="top left">7</k-legend>
 		<k-legend class="small bottom left">Home</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="top left">8</k-legend>
 		<k-legend class="small bottom right"><k-icon class="arrow up"></k-icon></k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="top left">9</k-legend>
 		<k-legend class="small bottom left">PgUp</k-legend>
 	</k-cap>
@@ -440,24 +533,24 @@ $( document ).ready(function() {
 		<k-legend class="center">&#43;</k-legend></k-cap>
 </k-row>
 <k-row>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="top left">4</k-legend>
 		<k-legend class="small bottom right"><k-icon class="arrow left"></k-icon></k-legend>
 	</k-cap>
-	<k-cap><k-legend class="top left">5</k-legend><k-homing></k-homing></k-cap>
-	<k-cap>
+	<k-cap class="number"><k-legend class="top left">5</k-legend><k-homing></k-homing></k-cap>
+	<k-cap class="number">
 		<k-legend class="top left">6</k-legend>
 		<k-legend class="small bottom right"><k-icon class="arrow right"></k-icon></k-legend>
 	</k-cap>
 </k-row>
 <k-row>
-	<k-cap><k-legend class="top left">1</k-legend><k-legend class="small bottom left">End</k-legend></k-cap>
-	<k-cap><k-legend class="top left">2</k-legend><k-legend class="small bottom right"><k-icon class="arrow down"></k-icon></k-legend></k-cap>
-	<k-cap><k-legend class="top left">3</k-legend><k-legend class="small bottom left">PgDn</k-legend></k-cap>
+	<k-cap class="number"><k-legend class="top left">1</k-legend><k-legend class="small bottom left">End</k-legend></k-cap>
+	<k-cap class="number"><k-legend class="top left">2</k-legend><k-legend class="small bottom right"><k-icon class="arrow down"></k-icon></k-legend></k-cap>
+	<k-cap class="number"><k-legend class="top left">3</k-legend><k-legend class="small bottom left">PgDn</k-legend></k-cap>
 	<k-cap class="mod tall"><k-legend class="small center">Enter<br><k-icon class="enter"></k-icon></k-legend></k-cap>
 </k-row>
 <k-row>
-	<k-cap style="--w:2"><k-legend class="top left">0</k-legend><k-legend class="small bottom left">Ins</k-legend></k-cap>
+	<k-cap class="number" style="--w:2"><k-legend class="top left">0</k-legend><k-legend class="small bottom left">Ins</k-legend></k-cap>
 	<k-cap><k-legend class="top left">.</k-legend><k-legend class="small bottom left">Del</k-legend></k-cap>
 </k-row>
 <k-row>
@@ -477,51 +570,51 @@ $( document ).ready(function() {
 <k-column>
 <k-row>
 	<k-cap class="mod"><k-legend class="small">Esc</k-legend></k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">!</k-legend>
 		<k-legend class="medium bottom left">1</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">"</k-legend>
 		<k-legend class="medium bottom left">2</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">£</k-legend>
 		<k-legend class="medium bottom left">3</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">$</k-legend>
 		<k-legend class="medium bottom left">4</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">%</k-legend>
 		<k-legend class="medium bottom left">5</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">^</k-legend>
 		<k-legend class="medium bottom left">6</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">&</k-legend>
 		<k-legend class="medium bottom left">7</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">*</k-legend>
 		<k-legend class="medium bottom left">8</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">(</k-legend>
 		<k-legend class="medium bottom left">9</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="number">
 		<k-legend class="medium top left">)</k-legend>
 		<k-legend class="medium bottom left">0</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">&ndash;</k-legend>
 		<k-legend class="medium bottom left">-</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">+</k-legend>
 		<k-legend class="medium bottom left">=</k-legend>
 	</k-cap>
@@ -537,24 +630,24 @@ $( document ).ready(function() {
 			<k-icon class="tab"></k-icon>
 		</k-legend>
 	</k-cap>
-	<k-cap><k-legend class="top left">Q</k-legend></k-cap>
-	<k-cap>
+	<k-cap class="alpha"><k-legend class="top left">Q</k-legend></k-cap>
+	<k-cap class="alpha">
 		<k-legend class="top left">W</k-legend>
 		<k-legend class="medium bottom right">な</k-legend>
 	</k-cap>
-	<k-cap><k-legend class="top left">E</k-legend></k-cap>
-	<k-cap><k-legend class="top left">R</k-legend></k-cap>
-	<k-cap><k-legend class="top left">T</k-legend></k-cap>
-	<k-cap><k-legend class="top left">Y</k-legend></k-cap>
-	<k-cap><k-legend class="top left">U</k-legend></k-cap>
-	<k-cap><k-legend class="top left">I</k-legend></k-cap>
-	<k-cap><k-legend class="top left">O</k-legend></k-cap>
-	<k-cap><k-legend class="top left">P</k-legend></k-cap>
-	<k-cap>
+	<k-cap class="alpha"><k-legend class="top left">E</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">R</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">T</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">Y</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">U</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">I</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">O</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">P</k-legend></k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">{</k-legend>
 		<k-legend class="medium bottom left">[</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">}</k-legend>
 		<k-legend class="medium bottom left">]</k-legend>
 	</k-cap>	
@@ -573,40 +666,40 @@ $( document ).ready(function() {
 			<k-window class="gold"></k-window>
 		</k-cap>
 	</k-cap>
-	<k-cap>
+	<k-cap class="alpha">
 		<k-legend class="top left">A</k-legend>
 		<k-legend class="front">Vol_Dn</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="alpha">
 		<k-legend class="top left">S</k-legend>
 		<k-legend class="front">Vol_Up</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="alpha">
 		<k-legend class="top left">D</k-legend>
 		<k-legend class="front">Mute</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="alpha">
 		<k-legend class="top left">F</k-legend>
 		<k-legend class="front">Eject</k-legend>
 		<k-homing></k-homing>
 	</k-cap>
-	<k-cap><k-legend class="top left">G</k-legend></k-cap>
-	<k-cap><k-legend class="top left">H</k-legend></k-cap>
-	<k-cap>
+	<k-cap class="alpha"><k-legend class="top left">G</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">H</k-legend></k-cap>
+	<k-cap class="alpha">
 		<k-legend class="top left">J</k-legend>
 		<k-homing></k-homing>
 	</k-cap>
-	<k-cap><k-legend class="top left">K</k-legend></k-cap>
-	<k-cap><k-legend class="top left">L</k-legend></k-cap>
-	<k-cap>
+	<k-cap class="alpha"><k-legend class="top left">K</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">L</k-legend></k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">:</k-legend>
 		<k-legend class="medium bottom left">;</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">@</k-legend>
 		<k-legend class="medium bottom left">'</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">~</k-legend>
 		<k-legend class="medium bottom left">#</k-legend>
 	</k-cap>
@@ -616,26 +709,26 @@ $( document ).ready(function() {
 	<k-cap class="mod 1.25">
 		<k-legend class="top left"><k-icon class="shift"></k-icon></k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">|</k-legend>
 		<k-legend class="medium bottom left">\</k-legend>
 	</k-cap>
-	<k-cap><k-legend class="top left">Z</k-legend></k-cap>
-	<k-cap><k-legend class="top left">X</k-legend></k-cap>
-	<k-cap><k-legend class="top left">C</k-legend></k-cap>
-	<k-cap><k-legend class="top left">V</k-legend></k-cap>
-	<k-cap><k-legend class="top left">B</k-legend></k-cap>
-	<k-cap><k-legend class="top left">N</k-legend></k-cap>
-	<k-cap><k-legend class="top left">M</k-legend></k-cap>
-	<k-cap>
+	<k-cap class="alpha"><k-legend class="top left">Z</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">X</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">C</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">V</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">B</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">N</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">M</k-legend></k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left"><</k-legend>
 		<k-legend class="medium bottom left">,</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">></k-legend>
 		<k-legend class="medium bottom left">.</k-legend>
 	</k-cap>
-	<k-cap>
+	<k-cap class="simbol">
 		<k-legend class="medium top left">?</k-legend>
 		<k-legend class="medium bottom left">/</k-legend>
 	</k-cap>
@@ -672,33 +765,33 @@ $( document ).ready(function() {
 
 <k-row style="--r:10; --x:1.5">
 <k-column style="--y:.5">
-	<k-cap><k-legend class="top left">Q</k-legend></k-cap>
-	<k-cap><k-legend class="top left">A</k-legend></k-cap>
-	<k-cap><k-legend class="top left">Z</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">Q</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">A</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">Z</k-legend></k-cap>
 	<k-cap class="mod"><k-legend class="small">Esc</k-legend></k-cap>
 </k-column>
 <k-column style="--y:.25">
-	<k-cap><k-legend class="top left">W</k-legend></k-cap>
-	<k-cap><k-legend class="top left">S</k-legend></k-cap>
-	<k-cap><k-legend class="top left">X</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">W</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">S</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">X</k-legend></k-cap>
 	<k-cap class="mod"><k-legend class="small">Tab</k-legend></k-cap>
 </k-column>
 <k-column>
-	<k-cap><k-legend class="top left">E</k-legend></k-cap>
-	<k-cap><k-legend class="top left">D</k-legend></k-cap>
-	<k-cap><k-legend class="top left">C</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">E</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">D</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">C</k-legend></k-cap>
 	<k-cap class="mod"><k-legend class="center small">Super</k-legend></k-cap>
 </k-column>
 <k-column style="--y:.25">
-	<k-cap><k-legend class="top left">R</k-legend></k-cap>
-	<k-cap><k-legend class="top left">F</k-legend></k-cap>
-	<k-cap><k-legend class="top left">V</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">R</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">F</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">V</k-legend></k-cap>
 	<k-cap class="mod"><k-legend class="small">Shift</k-legend></k-cap>
 </k-column>
 <k-column style="--y:.5">
-	<k-cap><k-legend class="top left">T</k-legend></k-cap>
-	<k-cap><k-legend class="top left">G</k-legend></k-cap>
-	<k-cap><k-legend class="top left">B</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">T</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">G</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">B</k-legend></k-cap>
 	<k-cap class="mod"><k-legend class="small">Bksp</k-legend></k-cap>
 </k-column>
 <k-column style="--y:2.75">
@@ -709,33 +802,33 @@ $( document ).ready(function() {
 	<k-cap style="--h:1.5" class="mod"><k-legend class="small">Alt</k-legend></k-cap>
 </k-column>
 <k-column style="--y:.5">
-	<k-cap><k-legend class="top left">Y</k-legend></k-cap>
-	<k-cap><k-legend class="top left">H</k-legend></k-cap>
-	<k-cap><k-legend class="top left">N</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">Y</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">H</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">N</k-legend></k-cap>
 	<k-cap class="mod"><k-legend class="top left"></k-legend></k-cap>
 </k-column>
 <k-column style="--y:.25">
-	<k-cap><k-legend class="top left">U</k-legend></k-cap>
-	<k-cap><k-legend class="top left">J</k-legend></k-cap>
-	<k-cap><k-legend class="top left">M</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">U</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">J</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">M</k-legend></k-cap>
 	<k-cap class="mod"><k-legend class="small">Fn</k-legend></k-cap>
 </k-column>
 <k-column>
-	<k-cap><k-legend class="top left">I</k-legend></k-cap>
-	<k-cap><k-legend class="top left">K</k-legend></k-cap>
-	<k-cap><k-legend class="top left">,</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">I</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">K</k-legend></k-cap>
+	<k-cap class="simbol"><k-legend class="top left">,</k-legend></k-cap>
 	<k-cap class="mod"><k-legend class="top left" class="small">-</k-legend></k-cap>
 </k-column>
 <k-column style="--y:.25">
-	<k-cap><k-legend class="top left">O</k-legend></k-cap>
-	<k-cap><k-legend class="top left">L</k-legend></k-cap>
-	<k-cap><k-legend class="top left">.</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">O</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">L</k-legend></k-cap>
+	<k-cap class="simbol"><k-legend class="top left">.</k-legend></k-cap>
 	<k-cap class="mod"><k-legend class="top left">'</k-legend></k-cap>
 </k-column>
 <k-column style="--y:.5">
-	<k-cap><k-legend class="top left">P</k-legend></k-cap>
-	<k-cap><k-legend class="top left">;</k-legend></k-cap>
-	<k-cap><k-legend class="top left">/</k-legend></k-cap>
+	<k-cap class="alpha"><k-legend class="top left">P</k-legend></k-cap>
+	<k-cap class="simbol"><k-legend class="top left">;</k-legend></k-cap>
+	<k-cap class="simbol"><k-legend class="top left">/</k-legend></k-cap>
 	<k-cap class="mod"><k-legend><k-icon class="enter"></k-icon></k-legend></k-cap>
 </k-column>
 </k-row>

@@ -104,6 +104,9 @@ $( document ).ready(function() {
 			}
 
 			if ($("input[name='keyset']:checked").val() == "custom") {
+				$('input[name="customizedColor"]').each(function(i, element){
+					$(this).siblings('input[type="radio"]').val($(this).val());
+				});
 				$('.customColors').removeClass('hidden').find('input:not([name="customizedColor"])').off('change').on('change', function(){
 					customColor();
 				});

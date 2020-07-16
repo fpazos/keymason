@@ -81,15 +81,21 @@ div.section {
   margin-top: 20px;
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
+  justify-content: start;
   flex-basis: 10%;
   flex-direction: row;
+}
+div.section:last-child{
+  margin-bottom: 20px;
 }
 div.section strong{
   flex: 10 0 100%
 }
 div.section label{
   flex: 10 0 10%
+}
+div.section button{
+  margin-right: 10px;
 }
 div.options, div.customColors{
   margin: 0px 20px;

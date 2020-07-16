@@ -104,18 +104,33 @@ $( document ).ready(function() {
 			}
 
 			if ($("input[name='keyset']:checked").val() == "custom") {
+				// Custom init
 				$('input[name="customizedColor"]').each(function(i, element){
 					$(this).siblings('input[type="radio"]').val($(this).val());
 				});
-				$('.customColors').removeClass('hidden').find('input:not([name="customizedColor"])').off('change').on('change', function(){
+				customColor();
+
+				// Events
+				// Run function on input change
+				$('.customColors').removeClass('hidden').find('input[name="colorback"], input[name="color"]').off('change').on('change', function(){
 					customColor();
 				});
+				// Customized colors
 				$('input[name="customizedColor"]').on('change', function(){
 					$(this).siblings('input[type="radio"]').val($(this).val()).attr('checked', 'checked');
 					customColor();
 				})
-				customColor();
+				// Save / Load
+				$('button.saveScheme').on('click', function(){
+					localStorage.setItem("scheme", JSON.stringify(currentStyle));
+				})
+				$('button.loadScheme').on('click', function(){
+					currentStyle = JSON.parse(localStorage.getItem("scheme"));
+					drawCustoms(currentStyle);
+				});
+				
 			} else {
+				// Custom reset
 				$('.customColors').addClass('hidden');
 				$('.customColors input, input[name="customizedColor"]').off('change');
 				$('.customStyles').empty();
@@ -266,6 +281,10 @@ $( document ).ready(function() {
 		<label><input type="radio" name="color" value="#393b3b"><div class="colorMiniature" style="background-color: #393b3b;"></div> N9</label>
 		<label><input type="radio" name="color" value="#171718" checked><div class="colorMiniature" style="background-color: #171718;"></div> CR</label>
 		<label><input type="radio" name="color" value=""><input name="customizedColor" type="color" val=""> Custom</label>
+	</div>
+	<div class="section save">
+		<button class="saveScheme">Save</button>
+		<button class="loadScheme">Load</button>
 	</div>
 </div>
 
